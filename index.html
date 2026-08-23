@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Swap App - Download</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: #f6f8fa;
+            color: #24292e;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #586069;
+            font-size: 16px;
+        }
+        .section {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        .download-btn {
+            display: inline-block;
+            background: #2ea44f;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: background 0.3s;
+        }
+        .download-btn:hover {
+            background: #2c974b;
+        }
+        .version {
+            background: #f6f8fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .steps {
+            counter-reset: step-counter;
+            list-style: none;
+        }
+        .steps li {
+            counter-increment: step-counter;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f6f8fa;
+            border-left: 4px solid #2ea44f;
+            border-radius: 4px;
+        }
+        .steps li::before {
+            content: counter(step-counter);
+            font-weight: bold;
+            color: #2ea44f;
+            margin-right: 10px;
+        }
+        .warning {
+            background: #fff5b1;
+            border: 1px solid #d9d0a5;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .github-link {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        .github-link:hover {
+            text-decoration: underline;
+        }
+        footer {
+            text-align: center;
+            color: #586069;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+            }
+            header, .section {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎭 Face Swap App</h1>
+            <p class="subtitle">Real-time AI-powered face swapping application</p>
+        </header>
+
+        <div class="section">
+            <h2> Download</h2>
+            <p>Get the latest version of Face Swap App:</p>
+            
+            <div class="version">
+                <h3>Version 1.0.0</h3>
+                <p><strong>Release Date:</strong> 2026</p>
+                <p><strong>Size:</strong> ~50 MB</p>
+                <a href="https://github.com/skylin210/skydistro-/releases/download/v1.0.0/face-swap-app.apk" class="download-btn">
+                    Download APK
+                </a>
+                <p style="margin-top: 10px; font-size: 14px; color: #586069;">
+                    For Android devices (Android 7.0+)
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📱 Installation Guide</h2>
+            <ol class="steps">
+                <li>Download the APK file using the button above</li>
+                <li>On your Android device, go to <strong>Settings → Security</strong></li>
+                <li>Enable <strong>"Unknown Sources"</strong> or <strong>"Install unknown apps"</strong></li>
+                <li>Open the downloaded APK file</li>
+                <li>Tap <strong>"Install"</strong></li>
+                <li>Once installed, open the app and enjoy!</li>
+            </ol>
+            
+            <div class="warning">
+                <strong>⚠️ Note:</strong> If you see a warning about installing from unknown sources, this is normal for apps not from the Play Store. The app is safe to install.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✨ Features</h2>
+            <ul style="padding-left: 20px;">
+                <li>Real-time face detection and swapping</li>
+                <li>Upload custom face images</li>
+                <li>Live camera integration</li>
+                <li>High-quality AI processing</li>
+                <li>Easy to use interface</li>
+                <li>Works offline (no internet required)</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>💻 Source Code</h2>
+            <p>This project is open source! View the code on GitHub:</p>
+            <p style="margin-top: 10px;">
+                <a href="https://github.com/skylin210/skydistro-" class="github-link">
+                    → View on GitHub
+                </a>
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>📝 Usage Instructions</h2>
+            <ol class="steps">
+                <li>Open the app</li>
+                <li>Upload a face photo you want to swap with</li>
+                <li>Grant camera permissions when prompted</li>
+                <li>Point your camera at your face</li>
+                <li>See the magic happen in real-time!</li>
+            </ol>
+        </div>
+
+        <footer>
+            <p>Made with ❤️ by skylin210</p>
+            <p style="margin-top: 5px; font-size: 14px;">
+                <a href="https://github.com/skylin210/skydistro-" class="github-link">GitHub Repository</a>
+            </p>
+        </footer>
+    </div>
+</body>
+  </html>
