@@ -1,92 +1,94 @@
 import streamlit as st
-import pandas as pd
-import os, uuid, base64, requests
-from datetime import datetime
+from streamlit_webrtc import webrtc_streamer
+import av
+import cv2
+import mediapipe as mp
+import numpy as np
 
-st.set_page_config(page_title="SkyDistro - Permanent", page_icon="🚀", layout="centered")
+# Page config
+st.set_page_config(page_title="Real-Time Face Swap", layout="wide")
+st.title("🎭 Real-Time Face Overlay Web App")
+st.markdown("Upload a photo in the sidebar, allow camera access, and watch the magic!")
 
-ADMIN_PASSWORD = "skylin123"
-DB_FILE = "releases.csv"
+# --- Sidebar for Image Upload ---
+st.sidebar.header("Upload Target Face")
+uploaded_file = st.sidebar.file_uploader("Choose an image (JPG/PNG)", type=["jpg", "png", "jpeg"])
 
-GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", "")
-GITHUB_REPO = st.secrets.get("GITHUB_REPO", "skylin210/skydistro-")
+target_face = None
+if uploaded_file is not None:
+    # Convert uploaded file to OpenCV image format
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    target_face = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-def upload_to_github(file_bytes, github_path):
-    if not GITHUB_TOKEN:
-        return False
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{github_path}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    r = requests.get(url, headers=headers)
-    sha = r.json().get("sha") if r.status_code == 200 else None
-    payload = {
-        "message": f"Upload {github_path}",
-        "content": base64.b64encode(file_bytes).decode(),
-    }
-    if sha:
-        payload["sha"] = sha
-    res = requests.put(url, headers=headers, json=payload)
-    return res.status_code in [200,201]
+# --- Initialize MediaPipe Face Mesh ---
+# We use a singleton pattern so it doesn't re-initialize on every frame
+@st.cache_resource
+def load_face_mesh():
+    mp_face_mesh = mp.solutions.face_mesh
+    return mp_face_mesh.FaceMesh(
+        max_num_faces=1,
+        refine_landmarks=True,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5
+    )
 
-if not os.path.exists(DB_FILE):
-    pd.DataFrame(columns=["date","artist","song","genre","email","upc","isrc","status","audio_path","cover_path"]).to_csv(DB_FILE, index=False)
+face_mesh = load_face_mesh()
 
-st.title("🚀 SkyDistro")
-st.caption("From Enugu to the World 🌍 | Permanent Storage: ACTIVE ✅")
-st.divider()
+# --- Video Processing Callback ---
+def video_frame_callback(frame):
+    # Convert frame to OpenCV format (numpy array)
+    img = frame.to_ndarray(format="bgr24")
+    
+    # If a target face is uploaded, process the frame
+    if target_face is not None:
+        # Convert to RGB for MediaPipe
+        rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = face_mesh.process(rgb_img)
+        
+        if results.multi_face_landmarks:
+            for face_landmarks in results.multi_face_landmarks:
+                h, w, _ = img.shape
+                x_min, x_max = w, 0
+                y_min, y_max = h, 0
+                
+                # Find the bounding box of the face
+                for lm in face_landmarks.landmark:
+                    cx, cy = int(lm.x * w), int(lm.y * h)
+                    if cx < x_min: x_min = cx
+                    if cx > x_max: x_max = cx
+                    if cy < y_min: y_min = cy
+                    if cy > y_max: y_max = cy
+                
+                # Add some padding to the bounding box
+                padding = int((x_max - x_min) * 0.2)
+                x_min = max(0, x_min - padding)
+                y_min = max(0, y_min - padding)
+                x_max = min(w, x_max + padding)
+                y_max = min(h, y_max + padding)
+                
+                face_w = x_max - x_min
+                face_h = y_max - y_min
+                
+                if face_w > 0 and face_h > 0:
+                    # Resize the target face to match the detected face size
+                    resized_target = cv2.resize(target_face, (face_w, face_h))
+                    
+                    # Simple overlay (replace pixels in the bounding box)
+                    # Note: For a seamless blend, you would use alpha masking or Poisson blending here
+                    img[y_min:y_max, x_min:x_max] = resized_target
 
-menu = st.sidebar.selectbox("Menu", ["Upload Music", "Check Status", "Admin Panel"])
+    # Convert back to av.VideoFrame for Streamlit
+    return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-if menu == "Upload Music":
-    st.subheader("Upload Your Release")
-    st.success("✅ Permanent Storage Enabled - Songs will never delete again")
-    with st.form("upload"):
-        artist = st.text_input("Artist Name *")
-        email = st.text_input("Email / WhatsApp *")
-        song = st.text_input("Song Title *")
-        genre = st.selectbox("Genre", ["Afrobeats","Hip-Hop","Gospel","Highlife","R&B","Amapiano","Drill","Other"])
-        audio = st.file_uploader("Audio File WAV/MP3 *", type=["mp3","wav","flac"])
-        cover = st.file_uploader("Cover Art JPG 3000x3000 *", type=["jpg","jpeg","png"])
-        agree = st.checkbox("I own this song 100%")
-        submit = st.form_submit_button("🚀 SUBMIT FOREVER")
+# --- Streamlit WebRTC Camera Component ---
+webrtc_streamer(
+    key="face-swap-camera",
+    video_frame_callback=video_frame_callback,
+    media_stream_constraints={
+        "video": True,
+        "audio": False
+    },
+    async_processing=True,
+)
 
-        if submit:
-            if not all([artist,email,song,audio,cover,agree]):
-                st.error("Fill all fields")
-            else:
-                upc = str(uuid.uuid4().int)[:13]
-                isrc = f"NG{datetime.now().year}SKY{str(uuid.uuid4().int)[:5]}"
-                safe_name = f"{artist}_{song}".replace(" ", "_")
-                audio_path = f"uploads/audio/{safe_name}_{audio.name}"
-                cover_path = f"uploads/covers/{safe_name}_{cover.name}"
-
-                with st.spinner("Saving to GitHub forever..."):
-                    ok1 = upload_to_github(audio.getbuffer().tobytes(), audio_path)
-                    ok2 = upload_to_github(cover.getbuffer().tobytes(), cover_path)
-                    df = pd.read_csv(DB_FILE)
-                    new = {"date": datetime.now().strftime("%Y-%m-%d"), "artist": artist, "song": song, "genre": genre, "email": email, "upc": upc, "isrc": isrc, "status": "Pending", "audio_path": audio_path, "cover_path": cover_path}
-                    df = pd.concat([df, pd.DataFrame([new])], ignore_index=True)
-                    df.to_csv(DB_FILE, index=False)
-                    with open(DB_FILE, "rb") as f:
-                        upload_to_github(f.read(), DB_FILE)
-
-                st.success(f"🔥 {song} by {artist} SAVED FOREVER on GitHub!")
-                st.info(f"UPC: {upc}\nISRC: {isrc}\nPath: {audio_path}")
-
-elif menu == "Check Status":
-    st.subheader("Check Status")
-    q = st.text_input("Enter your email")
-    if q:
-        df = pd.read_csv(DB_FILE)
-        st.dataframe(df[df['email'].str.contains(q, case=False, na=False)])
-
-else:
-    st.subheader("Admin - SkyLin Only")
-    pwd = st.text_input("Password", type="password")
-    if pwd == ADMIN_PASSWORD:
-        df = pd.read_csv(DB_FILE)
-        st.dataframe(df)
-        st.write(f"Total Releases: {len(df)}")
-        if GITHUB_TOKEN:
-            st.success("GitHub Storage Connected ✅")
-        else:
-            st.error("No GitHub Token Found")
+st.info("⚠️ **Note:** Browsers require HTTPS to access the camera. Streamlit Cloud provides this automatically. If the camera doesn't load, ensure you clicked 'Allow' on the browser permission prompt.")
